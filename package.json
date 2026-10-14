@@ -1,0 +1,17 @@
+{
+  "name": "kenari-tray",
+  "version": "1.0.0",
+  "description": "System tray app that shows your Kenari quota and balance at a glance",
+  "license": "MIT",
+  "repository": "zihadrizkyef/kenari-tray",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.4.11"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
+  }
+}

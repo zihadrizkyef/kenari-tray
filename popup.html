@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<style>
+  :root {
+    --bg: #17181c;
+    --bg-raised: #1f2126;
+    --bg-inset: #121317;
+    --border: #2c2e35;
+    --ink: #ececef;
+    --ink-dim: #9a9ca6;
+    --ink-faint: #62646e;
+    --accent: #e8955a;          /* warm amber — kenari (canary) */
+    --ok: #4ade80;
+    --warn: #facc15;
+    --danger: #f87171;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    --mono: "Cascadia Mono", Consolas, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--ink);
+    background: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .card {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,.55);
+  }
+
+  /* ---------- header ---------- */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px 10px;
+    -webkit-app-region: drag;
+  }
+  .dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #f7c78b, var(--accent) 65%);
+    flex: none;
+    position: relative;
+  }
+  .dot::after {
+    content: ""; position: absolute; inset: 6px;
+    border-radius: 50%; background: #17181c; opacity: .85;
+  }
+  .title { flex: 1; min-width: 0; }
+  .title h1 { font-size: 13.5px; font-weight: 600; letter-spacing: .2px; }
+  .title .sub { font-size: 11px; color: var(--ink-faint); margin-top: 1px; }
+  .icon-btn {
+    -webkit-app-region: no-drag;
+    width: 26px; height: 26px; flex: none;
+    display: grid; place-items: center;
+    border: none; border-radius: 6px;
+    background: transparent; color: var(--ink-dim);
+    cursor: pointer; font-size: 13px;
+  }
+  .icon-btn:hover { background: var(--bg-raised); color: var(--ink); }
+  .icon-btn.spin svg { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- body ---------- */
+  main { flex: 1; overflow-y: auto; padding: 2px 14px 12px; }
+  main::-webkit-scrollbar { width: 0; }
+
+  .section-label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: .09em; text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 12px 0 7px;
+  }
+  .section-label:first-child { margin-top: 4px; }
+
+  /* quota rows */
+  .quota {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px 11px;
+    margin-bottom: 8px;
+  }
+  .quota .row1 {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 3px;
+  }
+  .quota .name { font-weight: 600; font-size: 12.5px; }
+  .quota .pct { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); }
+  .quota .row2 {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .quota .amounts { font-size: 11.5px; color: var(--ink-dim); }
+  .quota .amounts b { color: var(--ink); font-weight: 600; font-family: var(--mono); font-size: 11.5px; }
+  .quota .reset { font-size: 10.5px; color: var(--ink-faint); }
+  .bar {
+    height: 5px; border-radius: 3px;
+    background: var(--bg-inset);
+    overflow: hidden;
+  }
+  .bar > i {
+    display: block; height: 100%;
+    border-radius: 3px;
+    transition: width .5s cubic-bezier(.2,.7,.3,1), background-color .3s;
+  }
+
+  /* balance */
+  .balance {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .bal-cell {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px 10px;
+  }
+  .bal-cell.wide { grid-column: 1 / -1; }
+  .bal-cell .k { font-size: 10.5px; color: var(--ink-faint); margin-bottom: 3px; }
+  .bal-cell .v { font-family: var(--mono); font-size: 14px; font-weight: 600; }
+  .bal-cell .v small { font-size: 11px; color: var(--ink-dim); font-weight: 400; }
+
+  .coupon {
+    display: flex; align-items: center; gap: 8px;
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg-raised));
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 11.5px;
+    margin-bottom: 8px;
+  }
+  .coupon .code { font-family: var(--mono); font-weight: 600; color: var(--accent); }
+  .coupon .rest { margin-left: auto; color: var(--ink-dim); font-family: var(--mono); }
+
+  /* states */
+  .empty, .error-box, .setup {
+    text-align: center;
+    padding: 26px 18px;
+    color: var(--ink-dim);
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .setup input {
+    width: 100%; margin-top: 12px;
+    background: var(--bg-inset);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    font-family: var(--mono); font-size: 12px;
+    padding: 9px 11px;
+    outline: none;
+  }
+  .setup input:focus { border-color: var(--accent); }
+  .setup button, .btn {
+    margin-top: 10px;
+    background: var(--accent);
+    color: #201408;
+    border: none; border-radius: var(--radius-sm);
+    font-family: var(--font); font-weight: 600; font-size: 12.5px;
+    padding: 8px 14px;
+    cursor: pointer;
+    width: 100%;
+  }
+  .setup button:hover, .btn:hover { filter: brightness(1.08); }
+
+  /* footer */
+  footer {
+    display: flex; align-items: center;
+    padding: 9px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 10.5px; color: var(--ink-faint);
+    gap: 8px;
+  }
+  footer .link {
+    color: var(--ink-dim); cursor: pointer; text-decoration: none;
+  }
+  footer .link:hover { color: var(--accent); }
+  footer .spacer { flex: 1; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-faint); flex: none; }
+  .status-dot.ok { background: var(--ok); }
+  .status-dot.err { background: var(--danger); }
+</style>
+</head>
+<body>
+<div class="card">
+  <header>
+    <div class="dot"></div>
+    <div class="title">
+      <h1>Kenari</h1>
+      <div class="sub" id="planName">Kuota &amp; saldo</div>
+    </div>
+    <button class="icon-btn" id="btnRefresh" title="Refresh">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+    </button>
+    <button class="icon-btn" id="btnClose" title="Tutup">✕</button>
+  </header>
+
+  <main id="main">
+    <div class="empty">Memuat…</div>
+  </main>
+
+  <footer>
+    <span class="status-dot" id="statusDot"></span>
+    <span id="fetchedAt">—</span>
+    <span class="spacer"></span>
+    <a class="link" id="linkDash">Dashboard</a>
+    <a class="link" id="linkQuit">Keluar</a>
+  </footer>
+</div>
+
+<script>
+  const main = document.getElementById('main');
+  const planName = document.getElementById('planName');
+  const fetchedAt = document.getElementById('fetchedAt');
+  const statusDot = document.getElementById('statusDot');
+  const btnRefresh = document.getElementById('btnRefresh');
+
+  const rp = (n) => 'Rp' + Math.round(Number(n)).toLocaleString('id-ID');
+  const micro = (n) => rp(Number(n) / 1e6);
+  const pctUsed = (f) => (f * 100).toFixed(f < 0.1 ? 1 : 0) + '%';
+  const pctLeft = (f) => Math.round((1 - f) * 100) + '%';
+
+  function fmtReset(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const now = new Date();
+    const ms = d - now;
+    if (ms <= 0) return 'segera reset';
+    const mins = Math.floor(ms / 60000);
+    if (mins < 60) return `reset ${mins} mnt lagi`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `reset ${hrs} jam lagi`;
+    const days = Math.floor(hrs / 24);
+    return `reset ${days} hari lagi`;
+  }
+
+  function barColor(f) {
+    if (f < 0.5) return 'var(--ok)';
+    if (f < 0.8) return 'var(--warn)';
+    return 'var(--danger)';
+  }
+
+  const WINDOWS = [
+    ['five_hour', '5 Jam'],
+    ['week', 'Mingguan'],
+    ['month', 'Bulanan'],
+  ];
+
+  function render({ data, error, hasKey }) {
+    if (!hasKey) {
+      planName.textContent = 'Pengaturan awal';
+      statusDot.className = 'status-dot err';
+      fetchedAt.textContent = 'API key belum diatur';
+      main.innerHTML = `
+        <div class="setup">
+          Masukkan Kenari API key<br>(diawali <b>kn-</b>) untuk mulai memantau.
+          <input id="keyInput" type="password" placeholder="kn-…" spellcheck="false" />
+          <button id="saveKey">Simpan</button>
+        </div>`;
+      const input = document.getElementById('keyInput');
+      input.focus();
+      document.getElementById('saveKey').onclick = () => window.kenari.setApiKey(input.value);
+      input.onkeydown = (e) => { if (e.key === 'Enter') window.kenari.setApiKey(input.value); };
+      return;
+    }
+
+    if (error && !data) {
+      statusDot.className = 'status-dot err';
+      fetchedAt.textContent = 'Gagal memuat';
+      main.innerHTML = `<div class="error-box">⚠ ${escapeHtml(error)}</div>
+        <button class="btn" onclick="window.kenari.refresh()">Coba lagi</button>`;
+      return;
+    }
+
+    const q = data.quota || {};
+    const b = data.balance || {};
+    const plan = q.plan;
+    planName.textContent = plan ? (plan.name || 'Paket aktif') : 'PAYG (tanpa paket)';
+    statusDot.className = 'status-dot ok';
+    const t = data.fetchedAt ? new Date(data.fetchedAt) : null;
+    fetchedAt.textContent = t
+      ? 'Diperbarui ' + t.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      : '—';
+
+    let html = '';
+
+    // --- quota windows ---
+    const windows = plan?.windows || {};
+    const hasWindows = Object.keys(windows).length > 0;
+    html += `<div class="section-label">Penggunaan Kuota</div>`;
+    if (!hasWindows) {
+      html += `<div class="quota"><div class="row1"><span class="name">Unlimited</span></div>
+        <div class="amounts">Tidak ada batas kuota pada paket ini.</div></div>`;
+    }
+    for (const [key, label] of WINDOWS) {
+      const w = windows[key];
+      if (!w) continue;
+      const f = Math.min(1, w.used_frac || 0);
+      html += `
+        <div class="quota">
+          <div class="row1"><span class="name">${label}</span><span class="pct">sisa ${pctLeft(f)}</span></div>
+          <div class="row2">
+            <span class="amounts">sisa <b>${rp(w.remaining_rp)}</b> dari ${rp(w.budget_rp)}</span>
+            <span class="reset">${fmtReset(w.resets_at)}</span>
+          </div>
+          <div class="bar"><i style="width:${(f*100).toFixed(1)}%;background:${barColor(f)}"></i></div>
+        </div>`;
+    }
+
+    // --- coupon ---
+    if (q.coupon) {
+      html += `<div class="coupon">
+        <span>Kupon</span><span class="code">${escapeHtml(q.coupon.code || '?')}</span>
+        <span class="rest">sisa ${rp(q.coupon.remaining_rp)}</span>
+      </div>`;
+    }
+
+    // --- balance ---
+    html += `<div class="section-label">Saldo PAYG</div>
+      <div class="balance">
+        <div class="bal-cell wide"><div class="k">Tersedia</div><div class="v">${micro(b.available_micro_idr ?? 0)}</div></div>
+        <div class="bal-cell"><div class="k">Saldo total</div><div class="v"><small>${micro(b.balance_micro_idr ?? 0)}</small></div></div>
+        <div class="bal-cell"><div class="k">Tertahan</div><div class="v"><small>${micro(b.reserved_micro_idr ?? 0)}</small></div></div>
+      </div>`;
+
+    if (error) html += `<div class="error-box" style="padding:8px">⚠ ${escapeHtml(error)}</div>`;
+
+    main.innerHTML = html;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  window.kenari.onData(render);
+  btnRefresh.onclick = () => {
+    btnRefresh.classList.add('spin');
+    window.kenari.refresh();
+    setTimeout(() => btnRefresh.classList.remove('spin'), 900);
+  };
+  document.getElementById('btnClose').onclick = () => window.kenari.hide();
+  document.getElementById('linkDash').onclick = () => window.kenari.openDashboard();
+  document.getElementById('linkQuit').onclick = () => window.kenari.quit();
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.kenari.hide(); });
+</script>
+</body>
+</html>
